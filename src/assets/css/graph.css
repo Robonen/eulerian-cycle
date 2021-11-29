@@ -1,0 +1,227 @@
+@charset "UTF-8";
+
+:root {
+  --main-color: rgb(97 196 189);
+  --complement-color: rgb(46 105 120);
+  --hover-main-color: rgb(224, 241, 240);
+  --hover-complement-color: rgb(214 231 234);
+  --body-color: #f3f3f3;
+  --text-color: #3d3d3d;
+}
+
+::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+  background-color: var(--body-color);
+}
+
+body > #app {
+  margin: 0;
+  font-family: "Formular";
+  height: 100%;
+  background-color: var(--body-color);
+  color: var(--text-color);
+  display: flex;
+}
+
+html {
+  height: 100%;
+}
+
+.wrapper {
+  display: flex;
+  flex: 1;
+  padding-right: 32px;
+  padding-left: 32px;
+  flex-direction: column;
+}
+
+.graph-cont {
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.graph-cont,
+.graph {
+  width: 100%;
+}
+
+header {
+  width: 100%;
+  padding: 48px 0;
+  display: flex;
+  justify-content: space-between;
+}
+
+.header-step-cont {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-left: 48px;
+}
+
+.header-step-description {
+  font-size: 14px;
+  color: gray;
+}
+
+.header-step-text {
+  display: flex;
+  font-size: 28px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.header-arrow {
+  width: 48px;
+  height: 20px;
+  margin: 0 12px;
+  background-image: url("~@/assets/icons/vector.svg");
+}
+
+.control-cont {
+  padding: 48px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.menu-cont {
+  padding: 48px 64px;
+  width: max-content;
+  overflow-y: auto;
+  display: flex;
+}
+
+.menu-cont__left {
+  padding-right: 0;
+}
+
+.menu-cont__right {
+  padding-left: 0;
+}
+
+.step-cont,
+.btn-cont {
+  height: max-content;
+  margin: auto;
+}
+
+.step {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  border: 1px solid #c1c1c1;
+  border-radius: 100%;
+  cursor: pointer;
+  margin-bottom: 16px;
+  position: relative;
+  transition: 0.2s;
+}
+
+.step:last-child {
+  margin-bottom: 0;
+}
+
+.header-close-button {
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  opacity: 0.4;
+  background-image: url("~@/assets/icons/close.svg");
+}
+
+.step::after {
+  content: "";
+  position: absolute;
+  background: #c1c1c1;
+  width: 1.5px;
+  height: 16px;
+  bottom: -17px;
+}
+
+.step:last-child::after {
+  display: none;
+}
+
+.active-step {
+  border-color: #ff5c8e;
+  background: #f8e8ed;
+  color: #ec407a;
+  font-weight: 700;
+}
+
+.active-step::after {
+  background: #ff5c8e;
+}
+
+.last-active-step::after {
+  background: #c1c1c1;
+}
+
+.dynamic-active-step::after {
+  animation-name: next;
+  animation-duration: 4s;
+  animation-fill-mode: forwards;
+}
+
+@keyframes next {
+  from {
+    background: #c1c1c1;
+  }
+  to {
+    background: #ff5c8e;
+  }
+}
+
+.header-close-button:hover {
+  opacity: 1;
+}
+
+.control-button {
+  width: 32px;
+  height: 32px;
+  background-position: center;
+  margin: 0 12px;
+  cursor: pointer;
+  transition: 0.2s;
+  opacity: 0.6;
+}
+
+.main-control-button {
+  width: 40px;
+  height: 40px;
+}
+
+#previous-step {
+  background-image: url("~@/assets/icons/previous-step.svg");
+}
+
+#next-step {
+  background-image: url("~@/assets/icons/next-step.svg");
+}
+
+#play {
+  background-image: url("~@/assets/icons/play.svg");
+}
+
+#pause {
+  background-image: url("~@/assets/icons/pause.svg");
+}
+
+.control-button:hover {
+  opacity: 1;
+}
+
+.boundary-step {
+  opacity: 0.1;
+  cursor: auto;
+}
