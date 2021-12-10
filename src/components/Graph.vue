@@ -6,17 +6,19 @@
     @click.left.stop="unselectAllNodes"
   >
     <g>
-      <line
+      <component
         class="line-default"
         v-for="(link, idx) in links"
         :key="idx"
+        :is="link.source === link.target ? 'path' : 'line'"
         :x1="nodes[link.source].x"
         :y1="nodes[link.source].y"
         :x2="nodes[link.target].x"
         :y2="nodes[link.target].y"
+        :d="loopPosition(link.source)"
         :class="{ 'line-active': link.selected }"
         @click.right.stop.prevent="removeLink(idx)"
-      ></line>
+      ></component>
     </g>
     <g>
       <circle
@@ -38,16 +40,13 @@
         class="node-text"
         v-for="(node, idx) in nodes"
         :key="idx"
-        :x="node.x - 4"
+        :x="node.x - String(idx).length * 4"
         :y="node.y + 5.5"
       >
         {{ idx }}
       </text>
     </g>
   </svg>
-  <!-- <path d="M591,451 C291,300 891,300 591,451" stroke="black" fill="transparent" style="
-    stroke-width: 4px;
-"></path> -->
 </template>
 
 <script>
@@ -105,6 +104,19 @@ export default {
     //   }
     // );
 
+    const loopPosition = (coords) => {
+      const node = nodes.value[coords];
+
+      const x = node.x;
+      const y = node.y;
+      const hR = RADIUS / 2;
+      const m = 100;
+
+      return `M${x - hR},${y} C${x - m},${y - m} ${x + m}, ${y - m} ${
+        x + hR
+      },${y}`;
+    };
+
     // Methods
     const hasntIntersections = (node) => {
       return nodes.value.every((current) => {
@@ -123,6 +135,8 @@ export default {
 
     // Nodes
     const createNode = ({ offsetX, offsetY }) => {
+      if (nodes.value.length >= 99) return;
+
       const newNode = {
         x: offsetX,
         y: offsetY,
@@ -135,6 +149,8 @@ export default {
     };
 
     const removeNode = (id) => {
+      unselectAllNodes();
+
       links.value = links.value
         .filter((e) => e.source !== id && e.target !== id)
         .map((current) => {
@@ -151,14 +167,18 @@ export default {
     };
 
     const selectNode = (id) => {
-      if (linker.sourceEmpty()) linker.setSource(id);
-      else linker.addTarget(id);
-
-      activateNodes([id]);
+      if (linker.sourceEmpty()) {
+        linker.setSource(id);
+        activateNodes([id]);
+      } else {
+        linker.addTarget(id);
+      }
     };
 
     const unselectAllNodes = () => {
-      deactivateNodes(linker.expandIds());
+      if (!linker.sourceEmpty()) {
+        deactivateNodes([linker.getSource()]);
+      }
 
       linker.reset();
     };
@@ -211,6 +231,7 @@ export default {
 
     return {
       RADIUS,
+      loopPosition,
       nodes,
       links,
       renderer,
@@ -237,8 +258,10 @@ line {
   cursor: pointer;
 }
 
-line {
+line,
+path {
   stroke-width: 4px;
+  fill: transparent;
 }
 
 .node-text {
