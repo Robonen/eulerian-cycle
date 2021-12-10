@@ -3,7 +3,7 @@
     class="render-area"
     ref="renderer"
     @dblclick="createNode"
-    @click="deactivateAllNodes"
+    @click.left.stop="unselectAllNodes"
   >
     <g>
       <line
@@ -15,23 +15,23 @@
         :x2="nodes[link.target].x"
         :y2="nodes[link.target].y"
         :class="{ 'line-active': link.selected }"
-      />
+        @click.right.stop.prevent="removeLink(idx)"
+      ></line>
     </g>
     <g>
       <circle
         class="node-default"
-        r="25"
+        :r="RADIUS"
         v-for="(node, idx) in nodes"
         :key="idx"
         :cx="node.x"
         :cy="node.y"
         :class="{ 'node-active': node.selected }"
-        @dblclick.prevent="createNode"
-        @click.right.prevent="removeNode(idx)"
+        @click.right.stop.prevent="removeNode(idx)"
         @click.left.stop="selectNode(idx)"
         @mousedown="dragNode($event, idx)"
-        @mouseup="dropNode()"
-      />
+        @mouseup="dropNode"
+      ></circle>
     </g>
     <g>
       <text
@@ -45,10 +45,13 @@
       </text>
     </g>
   </svg>
+  <!-- <path d="M591,451 C291,300 891,300 591,451" stroke="black" fill="transparent" style="
+    stroke-width: 4px;
+"></path> -->
 </template>
 
 <script>
-import { ref, watch } from "vue";
+import { ref } from "vue";
 import Linker from "./core/linker";
 import EulerCycle from "./core/euler";
 
@@ -80,27 +83,27 @@ export default {
     const euler = new EulerCycle();
 
     // Watchers
-    watch(
-      () => props.stepData,
-      (sd) => {
-        nodes.value.forEach((e) => {
-          e.selected = false;
-        });
+    // watch(
+    //   () => props.stepData,
+    //   (sd) => {
+    //     nodes.value.forEach((e) => {
+    //       e.selected = false;
+    //     });
 
-        links.value.forEach((e) => {
-          e.selected = false;
-        });
+    //     links.value.forEach((e) => {
+    //       e.selected = false;
+    //     });
 
-        if (Object.keys(sd).length !== 0) {
-          nodes.value[sd.source].selected = true;
-          nodes.value[sd.target].selected = true;
-          links.value.forEach((e) => {
-            if (e.source === sd.source && e.target === sd.target)
-              e.selected = true;
-          });
-        }
-      }
-    );
+    //     if (Object.keys(sd).length !== 0) {
+    //       nodes.value[sd.source].selected = true;
+    //       nodes.value[sd.target].selected = true;
+    //       links.value.forEach((e) => {
+    //         if (e.source === sd.source && e.target === sd.target)
+    //           e.selected = true;
+    //       });
+    //     }
+    //   }
+    // );
 
     // Methods
     const hasntIntersections = (node) => {
@@ -111,12 +114,6 @@ export default {
         );
       });
     };
-
-    const deactivateAllNodes = () =>
-      nodes.value.forEach((e) => {
-        e.selected = false;
-        linker.reset();
-      });
 
     const activateNodes = (ids) =>
       ids.forEach((e) => (nodes.value[e].selected = true));
@@ -138,23 +135,32 @@ export default {
     };
 
     const removeNode = (id) => {
-      links.value = links.value.filter(
-        (e) => e.source !== id && e.target !== id
-      );
-      nodes.value = nodes.value.filter((el, idx) => idx !== id);
+      links.value = links.value
+        .filter((e) => e.source !== id && e.target !== id)
+        .map((current) => {
+          current.source =
+            current.source > id ? current.source - 1 : current.source;
+          current.target =
+            current.target > id ? current.target - 1 : current.target;
+          return current;
+        });
+
+      nodes.value = nodes.value.filter((_, idx) => idx !== id);
+
       emit("isEuler", []);
     };
 
     const selectNode = (id) => {
-      if (linker.sourceEmpty()) {
-        linker.source = id;
-        activateNodes([id]);
-      } else {
-        linker.target = id;
-        deactivateNodes([linker.source, linker.target]);
-        createLink(linker.load());
-        linker.reset();
-      }
+      if (linker.sourceEmpty()) linker.setSource(id);
+      else linker.addTarget(id);
+
+      activateNodes([id]);
+    };
+
+    const unselectAllNodes = () => {
+      deactivateNodes(linker.expandIds());
+
+      linker.reset();
     };
 
     // Node drag and drop
@@ -186,23 +192,33 @@ export default {
     };
 
     // Links
-    const createLink = (link) => {
-      links.value.push(Object.assign({ selected: false }, link));
+    linker.onLink((source, target) => {
+      links.value.push({
+        selected: false,
+        source,
+        target,
+      });
 
       euler.loadLinks([...links.value]);
 
       if (euler.check()) emit("isEuler", euler.find());
       else emit("isEuler", []);
+    });
+
+    const removeLink = (id) => {
+      links.value = links.value.filter((_, idx) => idx !== id);
     };
 
     return {
+      RADIUS,
       nodes,
       links,
       renderer,
       createNode,
       selectNode,
+      unselectAllNodes,
       removeNode,
-      deactivateAllNodes,
+      removeLink,
       dragNode,
       dropNode,
     };
@@ -234,6 +250,7 @@ line {
   -webkit-user-select: none;
   -ms-user-select: none;
   fill: #fff;
+  pointer-events: none;
 }
 
 .node-default {

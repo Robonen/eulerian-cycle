@@ -1,44 +1,55 @@
 class Linker {
   #source = null;
-  #target = null;
+  #targets = null;
+  #callback = () => {};
 
-  constructor() {}
+  constructor() {
+    this.reset();
+  }
 
-  get source() {
+  getSource() {
     return this.#source;
   }
 
-  set source(src) {
+  setSource(src) {
     if (this.#source === null) this.#source = src;
   }
 
-  get target() {
-    return this.#target;
+  getTargets() {
+    return this.#targets;
   }
 
-  set target(trg) {
-    if (trg === this.#source) return;
-    if (this.#target === null) this.#target = trg;
+  setTargets(trg) {
+    this.#targets = trg;
+  }
+
+  addTarget(trg) {
+    this.#targets.push(trg);
+    this.#callback(this.#source, trg);
   }
 
   sourceEmpty() {
     return this.#source === null;
   }
 
-  targetEmpty() {
-    return this.#target === null;
+  targetsEmpty() {
+    return this.#targets.length === 0;
   }
 
-  load() {
-    return {
-      source: this.#source,
-      target: this.#target,
-    };
+  expandIds() {
+    if (this.sourceEmpty()) {
+      return [...this.#targets];
+    }
+    return [this.#source, ...this.#targets];
+  }
+
+  onLink(fn) {
+    this.#callback = fn;
   }
 
   reset() {
     this.#source = null;
-    this.#target = null;
+    this.#targets = [];
   }
 }
 

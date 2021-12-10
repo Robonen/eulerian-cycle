@@ -141,5 +141,6 @@ export default {
 </script>
 
 <style>
+@import "~@/assets/css/creation.css";
 @import "~@/assets/css/graph.css";
 </style>
