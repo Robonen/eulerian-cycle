@@ -31,6 +31,7 @@ body {
   height: 100%;
   background-color: var(--body-color);
   color: var(--text-color);
+  padding: 0 64px;
 }
 
 html {
@@ -50,7 +51,7 @@ html {
   max-width: 100%;
   width: max-content;
   display: flex;
-  margin: 44px 0 56px;
+  margin: auto;
 }
 
 .matrix {
@@ -158,6 +159,7 @@ html {
   text-align: center;
   font-family: "Formular";
 }
+
 .number input[type="number"]::-webkit-outer-spin-button,
 .number input[type="number"]::-webkit-inner-spin-button {
   display: none;
