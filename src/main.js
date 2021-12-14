@@ -6,15 +6,16 @@ const app = createApp(App).use(router);
 
 app.directive("click-outside", {
   beforeMount(el, binding) {
-    el.clickOutsideEvent = function (event) {
-      if (!(el === event.target || el.contains(event.target))) {
+    const ourClickEventHandler = (event) => {
+      if (!el.contains(event.target) && el !== event.target) {
         binding.value(event, el);
       }
     };
-    document.body.addEventListener("click", el.clickOutsideEvent);
+    el.__vueClickEventHandler__ = ourClickEventHandler;
+    document.addEventListener("click", ourClickEventHandler);
   },
   unmounted(el) {
-    document.body.removeEventListener("click", el.clickOutsideEvent);
+    document.removeEventListener("click", el.__vueClickEventHandler__);
   },
 });
 

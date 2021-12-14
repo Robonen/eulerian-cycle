@@ -4,6 +4,7 @@
     ref="renderer"
     @dblclick="createNode"
     @click.left.stop="unselectAllNodes"
+    @contextmenu.prevent
   >
     <g>
       <component
@@ -66,6 +67,9 @@ export default {
     // Const
     const RADIUS = 25;
 
+    // Vars
+    let draggableNode = false;
+
     // Reactive
     const renderer = ref(null);
 
@@ -104,6 +108,7 @@ export default {
     //   }
     // );
 
+    // Methods
     const loopPosition = (coords) => {
       const node = nodes.value[coords];
 
@@ -117,7 +122,6 @@ export default {
       },${y}`;
     };
 
-    // Methods
     const hasntIntersections = (node) => {
       return nodes.value.every((current) => {
         return (
@@ -127,13 +131,13 @@ export default {
       });
     };
 
+    // Nodes
     const activateNodes = (ids) =>
       ids.forEach((e) => (nodes.value[e].selected = true));
 
     const deactivateNodes = (ids) =>
       ids.forEach((e) => (nodes.value[e].selected = false));
 
-    // Nodes
     const createNode = ({ offsetX, offsetY }) => {
       if (nodes.value.length >= 99) return;
 
@@ -167,6 +171,11 @@ export default {
     };
 
     const selectNode = (id) => {
+      if (draggableNode) {
+        draggableNode = false;
+        return;
+      }
+
       if (linker.sourceEmpty()) {
         linker.setSource(id);
         activateNodes([id]);
@@ -207,19 +216,36 @@ export default {
     const nodeMove = ({ offsetX, offsetY }) => {
       const d = drag.value;
 
+      draggableNode = true;
+
       nodes.value[d.id].x = offsetX - d.offsetX;
       nodes.value[d.id].y = offsetY - d.offsetY;
     };
 
     // Links
     linker.onLink((source, target) => {
+      let duplicateLink = null;
+
+      links.value.forEach((e, idx) => {
+        if (
+          (e.source === source && e.target === target) ||
+          (e.source === target && e.target === source)
+        )
+          duplicateLink = idx;
+      });
+
+      if (duplicateLink !== null) {
+        links.value.splice(duplicateLink, 1);
+        return;
+      }
+
       links.value.push({
         selected: false,
         source,
         target,
       });
 
-      euler.loadLinks([...links.value]);
+      euler.loadLinks(Object.values(links.value));
 
       if (euler.check()) emit("isEuler", euler.find());
       else emit("isEuler", []);
@@ -254,7 +280,8 @@ svg {
 }
 
 circle,
-line {
+line,
+path {
   cursor: pointer;
 }
 

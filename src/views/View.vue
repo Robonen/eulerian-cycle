@@ -1,78 +1,38 @@
 <template>
-  <!--<div class="adjacency_matrix-cont">
-    <div class="adjacency_matrix">
-      <div class="adjacency_matrix-menu">
-        <div class="header  header-matrix">Матрица смежности</div>
-        <div class="menu-icon close-icon"></div>
-      </div>
-      <div class="matrix-cont">
-        <div class="value-rows-matrix-cont">
-          <div class="value-row-matrix">0</div>
-          <div class="value-row-matrix">1</div>
-          <div class="value-row-matrix">2</div>
-        </div>
-        <div class="body-matrix">
-          <div class="matrix">
-            <div class="matrix-column">
-              <div class="value-matrix-column">0</div>
-              <div class="auto-matrix-cell"></div>
-              <div class="auto-matrix-cell"></div>
-              <div class="auto-matrix-cell"></div>
-            </div>
-            <div class="matrix-column">
-              <div class="value-matrix-column">1</div>
-              <div class="auto-matrix-cell"></div>
-              <div class="auto-matrix-cell"></div>
-              <div class="auto-matrix-cell"></div>
-            </div>
-            <div class="matrix-column">
-              <div class="value-matrix-column">2</div>
-              <div class="auto-matrix-cell"></div>
-              <div class="auto-matrix-cell"></div>
-              <div class="auto-matrix-cell"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>-->
-  <!--<div class="popup-cont">
-    <div class="popup">
-      <div class="popup-el popup-header">
-        <div class="header">Эйлеров граф <span class="version">v0.1</span></div>
-        <div class="menu-icon close-icon"></div>
-      </div>
-      <div class="popup-el popup-text">
-        <p>
-          Граф как математический объект есть совокупность двух множеств —
-          множества самих объектов, называемого множеством вершин, и множества
-          их парных связей, называемого множеством рёбер.
-        </p>
-        <p>Элемент множества рёбер есть пара элементов множества вершин.</p>
-      </div>
-      <div class="popup-el popup-text gray">by Robonen</div>
-      <div class="popup-el popup-button-cont">
-        <div class="popup-button">Уволиться</div>
-        <div class="main-popup-button">Поставить 10 баллов</div>
-      </div>
-    </div>
-  </div>-->
+  <guide v-show="showGuide" :steps="guide" @close="showGuide = false"></guide>
+  <popup v-show="showInfo" @close="showInfo = false">
+    <template v-slot:title>
+      Циклы в эйлером графе
+      <span class="version">v0.2</span>
+    </template>
+    <template v-slot:content>
+      <p>
+        <b>Эйлеров цикл</b>
+        &mdash; путь, проходящий по всем ребрам графа, и при этом только по
+        одному разу.
+      </p>
+    </template>
+  </popup>
   <div class="addition-cont menu">
     <div class="menu-cont">
       <div class="menu-icon matrix-icon">
         <div class="menu-prompt">Матрица смежности</div>
       </div>
-      <div class="menu-icon help-icon">
+      <div class="menu-icon help-icon" @click="showGuide = true">
         <div class="menu-prompt">Обучение управлению</div>
       </div>
-      <div class="menu-icon info-icon">
+      <div class="menu-icon info-icon" @click="showInfo = true">
         <div class="menu-prompt">О программе</div>
       </div>
     </div>
   </div>
   <div class="wrapper">
     <header>
-      <!--<div class="error">Эйлерова цикла в этом графе нет</div>-->
+      <transition name="fade">
+        <div v-if="errorText" class="error" @click="errorText = ''">
+          {{ errorText }}
+        </div>
+      </transition>
       <div class="header-step-cont inaccessible">
         <div class="header-step-text">
           <div class="header-vertex">
@@ -142,23 +102,54 @@
 </template>
 
 <script>
-import { computed, ref } from "vue";
-import Graph from "../components/Graph.vue";
-// Frontend не выдержит ещё одних правок. Тут и так сейчас много говна
+import { computed, onMounted, ref } from "vue";
+import Graph from "../components/Graph";
+import Guide from "../components/Guide";
+import Popup from "../components/Popup";
+
 export default {
   name: "View",
   components: {
     Graph,
+    Guide,
+    Popup,
   },
   setup() {
     // Const
     let timer = null;
+    const guide = [
+      {
+        name: "Создание вершин",
+        content:
+          "Для создания новой вершины необходимо дважды нажать левую кнопку мыши",
+        video: "/video/create.mp4",
+      },
+      {
+        name: "Связывание вершин",
+        content:
+          "Чтобы связать вершины, необходимо кликнуть левой кнопкой мыши по вершине, которую необходимо связать. Далее выбираются вершины, с которыми необходимо связать",
+        video: "/video/linking.mp4",
+      },
+    ];
 
     // Reactive
     const steps = ref([]);
     const currentStep = ref(0);
     const currentStepData = ref({});
     const played = ref(false);
+    const showInfo = ref(false);
+    const showGuide = ref(false);
+    const errorText = ref("");
+
+    // Mounted
+    onMounted(() => {
+      const key = "first_start";
+
+      if (JSON.parse(localStorage.getItem(key)) !== true) {
+        localStorage.setItem(key, true);
+        showGuide.value = true;
+      }
+    });
 
     // Computed
     const stepExists = computed(() => {
@@ -170,6 +161,10 @@ export default {
     });
 
     // Methods
+    const log = () => {
+      showInfo.value = true;
+    };
+
     const getSteps = (data) => {
       steps.value = data;
       currentStep.value = 0;
@@ -215,12 +210,12 @@ export default {
       prevStep,
       play,
       stop,
+      log,
+      showInfo,
+      showGuide,
+      guide,
+      errorText,
     };
   },
 };
 </script>
-
-<style>
-@import "~@/assets/css/creation.css";
-@import "~@/assets/css/graph.css";
-</style>
