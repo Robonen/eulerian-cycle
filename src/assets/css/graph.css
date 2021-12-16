@@ -509,15 +509,15 @@ p {
   font-size: 14px;
 }
 
-.fade-enter-active {
-  animation: fade-in 0.5s;
+.fade-up-enter-active {
+  animation: fade-up 0.5s;
 }
 
-.fade-leave-active {
-  animation: fade-in 0.5s reverse;
+.fade-up-leave-active {
+  animation: fade-up 0.5s reverse;
 }
 
-@keyframes fade-in {
+@keyframes fade-up {
   from {
     transform: translateY(-40px);
     opacity: 0;

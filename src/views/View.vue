@@ -1,5 +1,5 @@
 <template>
-  <guide v-show="showGuide" :steps="guide" @close="showGuide = false"></guide>
+  <guide v-show="showGuide" @close="showGuide = false"></guide>
   <popup v-show="showInfo" @close="showInfo = false">
     <template v-slot:title>
       Циклы в эйлером графе
@@ -28,33 +28,41 @@
   </div>
   <div class="wrapper">
     <header>
-      <transition name="fade">
+      <transition name="fade-up">
         <div v-if="errorText" class="error" @click="errorText = ''">
           {{ errorText }}
         </div>
       </transition>
-      <div class="header-step-cont inaccessible">
-        <div class="header-step-text">
-          <div class="header-vertex">
-            {{ stepExists ? steps[currentStep].source : "-" }}
+      <transition name="fade-up">
+        <div v-if="stepExists" class="header-step-cont">
+          <div class="header-step-text">
+            <div class="header-vertex">
+              {{ currentStepData.source ?? "-" }}
+            </div>
+            <div class="header-arrow"></div>
+            <div class="header-vertex">
+              {{ currentStepData.target ?? "-" }}
+            </div>
           </div>
-          <div class="header-arrow"></div>
-          <div class="header-vertex">
-            {{ stepExists ? steps[currentStep].target : "-" }}
+          <div class="header-step-description">
+            шаг {{ stepExists ? currentStepNumber + 1 : "-" }} /
+            {{ stepExists ? stepsTotal : "-" }}
           </div>
         </div>
-        <div class="header-step-description">
-          шаг {{ stepExists ? currentStep + 1 : "-" }} /
-          {{ stepExists ? stepsCount : "-" }}
-        </div>
-      </div>
+      </transition>
     </header>
     <div class="graph-cont">
-      <div class="empty-graph-cont">
+      <div v-if="!vertexExists" class="empty-graph-cont">
         Нажмите ЛКМ дважды, чтобы добавить вершину
       </div>
-      <graph @isEuler="getSteps" :stepData="currentStepData"></graph>
-      <div class="hints">Чтобы удалить вершину, нажмите ПКМ по ней</div>
+      <graph
+        :stepData="currentStepData"
+        @hasEuler="loadSteps"
+        @hasVertices="setVertices"
+      ></graph>
+      <div v-if="vertexExists" class="hints">
+        Чтобы удалить вершину, нажмите ПКМ по ней
+      </div>
     </div>
     <div class="control-cont">
       <div class="control-button" id="previous-step" @click="prevStep">
@@ -77,7 +85,6 @@
       >
         <div class="prompt">Продолжить</div>
       </div>
-
       <div class="control-button" id="next-step" @click="nextStep">
         <div class="prompt">Следующий шаг</div>
       </div>
@@ -85,14 +92,14 @@
   </div>
   <div class="addition-cont">
     <div class="step-cont">
-      <div
+      <!-- <div
         class="step"
         v-for="cs in stepsCount"
         :key="cs"
         :class="{ 'active-step last-active-step': cs - 1 === currentStep }"
       >
         {{ cs }}
-      </div>
+      </div> -->
       <!-- <div class="step active-step">2</div>
       <div class="step active-step last-active-step">3</div>
       <div class="step">1</div>
@@ -117,26 +124,16 @@ export default {
   setup() {
     // Const
     let timer = null;
-    const guide = [
-      {
-        name: "Создание вершин",
-        content:
-          "Для создания новой вершины необходимо дважды нажать левую кнопку мыши",
-        video: "/video/create.mp4",
-      },
-      {
-        name: "Связывание вершин",
-        content:
-          "Чтобы связать вершины, необходимо кликнуть левой кнопкой мыши по вершине, которую необходимо связать. Далее выбираются вершины, с которыми необходимо связать",
-        video: "/video/linking.mp4",
-      },
-    ];
+    const ANIMATION_DELAY = 1500;
+    const ERROR_DELAY = 5000;
 
     // Reactive
+    const vertices = ref(0);
     const steps = ref([]);
-    const currentStep = ref(0);
+    const currentStepNumber = ref(0);
     const currentStepData = ref({});
     const played = ref(false);
+
     const showInfo = ref(false);
     const showGuide = ref(false);
     const errorText = ref("");
@@ -152,44 +149,58 @@ export default {
     });
 
     // Computed
+    const vertexExists = computed(() => {
+      return vertices.value > 0;
+    });
+
     const stepExists = computed(() => {
       return steps.value.length > 0;
     });
 
-    const stepsCount = computed(() => {
+    const stepsTotal = computed(() => {
       return steps.value.length;
     });
 
     // Methods
-    const log = () => {
-      showInfo.value = true;
+    const showError = (msg) => {
+      errorText.value = msg;
+      setTimeout(() => (errorText.value = false), ERROR_DELAY);
     };
 
-    const getSteps = (data) => {
-      steps.value = data;
-      currentStep.value = 0;
-      currentStepData.value = steps.value[currentStep.value];
+    const setVertices = (data) => {
+      vertices.value = data;
+    };
+
+    const loadSteps = (data) => {
+      steps.value = data ?? [];
+      currentStepNumber.value = 0;
+      currentStepData.value = steps.value[currentStepNumber.value] ?? {};
     };
 
     const nextStep = () => {
-      if (currentStep.value >= stepsCount.value - 1) currentStep.value = 0;
-      else currentStep.value++;
+      if (currentStepNumber.value >= stepsTotal.value - 1)
+        currentStepNumber.value = 0;
+      else currentStepNumber.value++;
 
-      currentStepData.value = steps.value[currentStep.value];
+      currentStepData.value = steps.value[currentStepNumber.value];
     };
 
     const prevStep = () => {
-      if (currentStep.value <= 0) currentStep.value = stepsCount.value - 1;
-      else currentStep.value--;
+      if (currentStepNumber.value <= 0)
+        currentStepNumber.value = stepsTotal.value - 1;
+      else currentStepNumber.value--;
 
-      currentStepData.value = steps.value[currentStep.value];
+      currentStepData.value = steps.value[currentStepNumber.value];
     };
 
     const play = () => {
-      if (!stepExists.value) return;
+      if (!stepExists.value) {
+        showError("Эйлеров цикл не найден!");
+        return;
+      }
 
       played.value = true;
-      timer = setInterval(nextStep, 1000);
+      timer = setInterval(nextStep, ANIMATION_DELAY);
     };
 
     const stop = () => {
@@ -199,21 +210,26 @@ export default {
     };
 
     return {
+      // Player properties
+      vertexExists,
       steps,
-      stepsCount,
+      stepsTotal,
       stepExists,
-      currentStep,
+      currentStepNumber,
       currentStepData,
       played,
-      getSteps,
+
+      // Player methods
+      setVertices,
+      loadSteps,
       nextStep,
       prevStep,
       play,
       stop,
-      log,
+
+      // Helpers
       showInfo,
       showGuide,
-      guide,
       errorText,
     };
   },

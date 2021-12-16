@@ -25,16 +25,25 @@ export default {
   components: {
     Popup,
   },
-  props: {
-    steps: {
-      type: Array,
-      required: true,
-    },
-  },
   setup(props, { emit }) {
+    // Const
+    const steps = [
+      {
+        name: "Создание вершин",
+        content:
+          "Для создания новой вершины необходимо дважды нажать левую кнопку мыши",
+        video: "/video/create.mp4",
+      },
+      {
+        name: "Связывание вершин",
+        content:
+          "Чтобы связать вершины, необходимо кликнуть левой кнопкой мыши по вершине, которую необходимо связать. Далее выбираются вершины, с которыми необходимо связать",
+        video: "/video/linking.mp4",
+      },
+    ];
+
     // Reactive
     const currentStep = ref(0);
-
     // Methods
     const stepDown = () => {
       if (currentStep.value <= 0) return;
@@ -43,7 +52,7 @@ export default {
     };
 
     const stepUp = () => {
-      if (currentStep.value + 1 >= props.steps.length) {
+      if (currentStep.value + 1 >= steps.length) {
         close();
         return;
       }
@@ -57,6 +66,7 @@ export default {
     };
 
     return {
+      steps,
       currentStep,
       stepDown,
       stepUp,

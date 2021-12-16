@@ -131,6 +131,16 @@ export default {
       });
     };
 
+    const checkGraph = () => {
+      euler.loadLinks(Object.values(links.value));
+
+      if (links.value.length > 0 && euler.check()) {
+        emit("hasEuler", euler.find());
+      } else {
+        emit("hasEuler", null);
+      }
+    };
+
     // Nodes
     const activateNodes = (ids) =>
       ids.forEach((e) => (nodes.value[e].selected = true));
@@ -149,6 +159,7 @@ export default {
 
       if (hasntIntersections(newNode)) {
         nodes.value.push(newNode);
+        emit("hasVertices", nodes.value.length);
       }
     };
 
@@ -167,7 +178,8 @@ export default {
 
       nodes.value = nodes.value.filter((_, idx) => idx !== id);
 
-      emit("isEuler", []);
+      checkGraph();
+      emit("hasVertices", nodes.value.length);
     };
 
     const selectNode = (id) => {
@@ -245,10 +257,7 @@ export default {
         target,
       });
 
-      euler.loadLinks(Object.values(links.value));
-
-      if (euler.check()) emit("isEuler", euler.find());
-      else emit("isEuler", []);
+      checkGraph();
     });
 
     const removeLink = (id) => {
