@@ -262,6 +262,7 @@ export default {
 
     const removeLink = (id) => {
       links.value = links.value.filter((_, idx) => idx !== id);
+      checkGraph();
     };
 
     return {
