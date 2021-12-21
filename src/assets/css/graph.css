@@ -1,3 +1,5 @@
+@charset "UTF-8";
+
 :root {
   --main-color: rgb(97 196 189);
   --complement-color: rgb(46 105 120);
@@ -8,8 +10,8 @@
 }
 
 ::-webkit-scrollbar {
-  width: 0px;
-  height: 0px;
+  width: 6px;
+  height: 6px;
   background-color: var(--body-color);
 }
 

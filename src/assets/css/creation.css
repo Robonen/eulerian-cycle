@@ -1,14 +1,5 @@
 @charset "UTF-8";
 
-:root {
-  --main-color: rgb(97 196 189);
-  --complement-color: rgb(46 105 120);
-  --hover-main-color: rgb(224, 241, 240);
-  --hover-complement-color: rgb(214 231 234);
-  --body-color: #f3f3f3;
-  --text-color: #3d3d3d;
-}
-
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;

@@ -56,12 +56,12 @@
         Нажмите ЛКМ дважды, чтобы добавить вершину
       </div>
       <graph
-        :stepData="currentStepData"
+        :currentStep="currentStepNumber"
         @hasEuler="loadSteps"
         @hasVertices="setVertices"
       ></graph>
       <div v-if="vertexExists" class="hints">
-        Чтобы удалить вершину, нажмите ПКМ по ней
+        Чтобы удалить вершину или ребро, нажмите ПКМ
       </div>
     </div>
     <div class="control-cont">
@@ -91,20 +91,12 @@
     </div>
   </div>
   <div class="addition-cont">
-    <div class="step-cont">
-      <!-- <div
-        class="step"
-        v-for="cs in stepsCount"
-        :key="cs"
-        :class="{ 'active-step last-active-step': cs - 1 === currentStep }"
-      >
-        {{ cs }}
-      </div> -->
-      <!-- <div class="step active-step">2</div>
+    <!-- <div class="step-cont">
+      <div class="step active-step">2</div>
       <div class="step active-step last-active-step">3</div>
       <div class="step">1</div>
-      <div class="step">4</div> -->
-    </div>
+      <div class="step">4</div>
+    </div> -->
   </div>
 </template>
 

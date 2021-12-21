@@ -1,25 +1,36 @@
 <template>
   <svg
-    class="render-area"
     ref="renderer"
     @dblclick="createNode"
     @click.left.stop="unselectAllNodes"
     @contextmenu.prevent
   >
     <g>
-      <component
-        class="line-default"
-        v-for="(link, idx) in links"
-        :key="idx"
-        :is="link.source === link.target ? 'path' : 'line'"
-        :x1="nodes[link.source].x"
-        :y1="nodes[link.source].y"
-        :x2="nodes[link.target].x"
-        :y2="nodes[link.target].y"
-        :d="loopPosition(link.source)"
-        :class="{ 'line-active': link.selected }"
-        @click.right.stop.prevent="removeLink(idx)"
-      ></component>
+      <g v-for="(link, idx) in links" :key="idx">
+        <path
+          v-if="link.source === link.target"
+          class="line-default"
+          :class="{
+            'line-active': link.selected === 1,
+            'line-was-active': link.selected === 2,
+          }"
+          :d="loopPosition(link.source)"
+          @click.right.stop.prevent="removeLink(idx)"
+        ></path>
+        <line
+          v-else
+          class="line-default"
+          :class="{
+            'line-active': link.selected === 1,
+            'line-was-active': link.selected === 2,
+          }"
+          :x1="nodes[link.source].x"
+          :y1="nodes[link.source].y"
+          :x2="nodes[link.target].x"
+          :y2="nodes[link.target].y"
+          @click.right.stop.prevent="removeLink(idx)"
+        ></line>
+      </g>
     </g>
     <g>
       <circle
@@ -29,7 +40,10 @@
         :key="idx"
         :cx="node.x"
         :cy="node.y"
-        :class="{ 'node-active': node.selected }"
+        :class="{
+          'node-active': node.selected === 1,
+          'node-was-active': node.selected === 2,
+        }"
         @click.right.stop.prevent="removeNode(idx)"
         @click.left.stop="selectNode(idx)"
         @mousedown="dragNode($event, idx)"
@@ -51,16 +65,16 @@
 </template>
 
 <script>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import Linker from "./core/linker";
 import EulerCycle from "./core/euler";
 
 export default {
   name: "Graph",
   props: {
-    stepData: {
-      type: Object,
-      default: () => ({}),
+    currentStep: {
+      type: Number,
+      default: 0,
     },
   },
   setup(props, { emit }) {
@@ -69,6 +83,7 @@ export default {
 
     // Vars
     let draggableNode = false;
+    let loop = null;
 
     // Reactive
     const renderer = ref(null);
@@ -86,27 +101,31 @@ export default {
     const euler = new EulerCycle();
 
     // Watchers
-    // watch(
-    //   () => props.stepData,
-    //   (sd) => {
-    //     nodes.value.forEach((e) => {
-    //       e.selected = false;
-    //     });
+    watch(
+      () => props.currentStep,
+      (stepId) => {
+        if (loop === null) return;
 
-    //     links.value.forEach((e) => {
-    //       e.selected = false;
-    //     });
+        // Invalidate all
+        deactivateAll();
 
-    //     if (Object.keys(sd).length !== 0) {
-    //       nodes.value[sd.source].selected = true;
-    //       nodes.value[sd.target].selected = true;
-    //       links.value.forEach((e) => {
-    //         if (e.source === sd.source && e.target === sd.target)
-    //           e.selected = true;
-    //       });
-    //     }
-    //   }
-    // );
+        // Select passed
+        for (let i = 0; i < stepId; i++) {
+          const pass = loop[i];
+          const pass_id = findLink(pass);
+
+          links.value[pass_id].selected = 2;
+          wasActivatedNodes([pass.source, pass.target]);
+        }
+
+        // Select current
+        const current = loop[stepId];
+        const current_id = findLink(current);
+
+        links.value[current_id].selected = 1;
+        activateNodes([current.source, current.target]);
+      }
+    );
 
     // Methods
     const loopPosition = (coords) => {
@@ -132,21 +151,37 @@ export default {
     };
 
     const checkGraph = () => {
+      if (loop !== null) {
+        deactivateAll();
+
+        if (!linker.sourceEmpty()) activateNodes([linker.getSource()]);
+      }
+
       euler.loadLinks(Object.values(links.value));
 
       if (links.value.length > 0 && euler.check()) {
-        emit("hasEuler", euler.find());
+        loop = euler.find();
       } else {
-        emit("hasEuler", null);
+        loop = null;
       }
+
+      emit("hasEuler", loop);
     };
 
     // Nodes
     const activateNodes = (ids) =>
-      ids.forEach((e) => (nodes.value[e].selected = true));
+      ids.forEach((e) => (nodes.value[e].selected = 1));
 
     const deactivateNodes = (ids) =>
-      ids.forEach((e) => (nodes.value[e].selected = false));
+      ids.forEach((e) => (nodes.value[e].selected = 0));
+
+    const wasActivatedNodes = (ids) =>
+      ids.forEach((e) => (nodes.value[e].selected = 2));
+
+    const deactivateAll = () => {
+      nodes.value.forEach((node) => (node.selected = false));
+      links.value.forEach((link) => (link.selected = 0));
+    };
 
     const createNode = ({ offsetX, offsetY }) => {
       if (nodes.value.length >= 99) return;
@@ -154,7 +189,7 @@ export default {
       const newNode = {
         x: offsetX,
         y: offsetY,
-        selected: false,
+        selected: 0,
       };
 
       if (hasntIntersections(newNode)) {
@@ -235,24 +270,32 @@ export default {
     };
 
     // Links
+    const hasLink = (obj1, obj2) => {
+      return (
+        (obj1.source === obj2.source && obj1.target === obj2.target) ||
+        (obj1.source === obj2.target && obj1.target === obj2.source)
+      );
+    };
+
+    const findLink = (vertex) => {
+      return links.value.findIndex((link) => hasLink(vertex, link));
+    };
+
     linker.onLink((source, target) => {
       let duplicateLink = null;
 
       links.value.forEach((e, idx) => {
-        if (
-          (e.source === source && e.target === target) ||
-          (e.source === target && e.target === source)
-        )
-          duplicateLink = idx;
+        if (hasLink(e, { source, target })) duplicateLink = idx;
       });
 
       if (duplicateLink !== null) {
         links.value.splice(duplicateLink, 1);
+        checkGraph();
         return;
       }
 
       links.value.push({
-        selected: false,
+        selected: 0,
         source,
         target,
       });
@@ -321,11 +364,19 @@ path {
   fill: #ec407a;
 }
 
+.node-was-active {
+  fill: #8d3956;
+}
+
 .line-default {
   stroke: #3d3d3d;
 }
 
 .line-active {
-  stroke: #a81043;
+  stroke: #ff93b8;
+}
+
+.line-was-active {
+  stroke: #8d3956;
 }
 </style>
