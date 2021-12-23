@@ -141,19 +141,9 @@ export default {
       },${y}`;
     };
 
-    const hasntIntersections = (node) => {
-      return nodes.value.every((current) => {
-        return (
-          (RADIUS * 2) ** 2 <
-          (node.x - current.x) ** 2 + (node.y - current.y) ** 2
-        );
-      });
-    };
-
     const checkGraph = () => {
       if (loop !== null) {
         deactivateAll();
-
         if (!linker.sourceEmpty()) activateNodes([linker.getSource()]);
       }
 
@@ -192,10 +182,8 @@ export default {
         selected: 0,
       };
 
-      if (hasntIntersections(newNode)) {
-        nodes.value.push(newNode);
-        emit("hasVertices", nodes.value.length);
-      }
+      nodes.value.push(newNode);
+      emit("hasVertices", nodes.value.length);
     };
 
     const removeNode = (id) => {

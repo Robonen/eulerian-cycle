@@ -15,9 +15,9 @@
   </popup>
   <div class="addition-cont menu">
     <div class="menu-cont">
-      <div class="menu-icon matrix-icon">
+      <!-- <div class="menu-icon matrix-icon">
         <div class="menu-prompt">Матрица смежности</div>
-      </div>
+      </div> -->
       <div class="menu-icon help-icon" @click="showGuide = true">
         <div class="menu-prompt">Обучение управлению</div>
       </div>
@@ -91,12 +91,21 @@
     </div>
   </div>
   <div class="addition-cont">
-    <!-- <div class="step-cont">
-      <div class="step active-step">2</div>
-      <div class="step active-step last-active-step">3</div>
-      <div class="step">1</div>
-      <div class="step">4</div>
-    </div> -->
+    <div v-if="stepExists" class="step-cont">
+      <div
+        class="step"
+        v-for="(step, i) in steps"
+        :key="i"
+        :class="{
+          'active-step': i === currentStepNumber || i === currentStepNumber + 1,
+          'dynamic-active-step': played && i < currentStepNumber,
+          'last-active-step': i === currentStepNumber + 1,
+        }"
+        @click="currentStepNumber = i"
+      >
+        {{ step.source }}
+      </div>
+    </div>
   </div>
 </template>
 
