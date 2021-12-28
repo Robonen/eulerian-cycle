@@ -103,31 +103,33 @@ export default {
     // Watchers
     watch(
       () => props.currentStep,
-      (stepId) => {
-        if (loop === null) return;
-
-        // Invalidate all
-        deactivateAll();
-
-        // Select passed
-        for (let i = 0; i < stepId; i++) {
-          const pass = loop[i];
-          const pass_id = findLink(pass);
-
-          links.value[pass_id].selected = 2;
-          wasActivatedNodes([pass.source, pass.target]);
-        }
-
-        // Select current
-        const current = loop[stepId];
-        const current_id = findLink(current);
-
-        links.value[current_id].selected = 1;
-        activateNodes([current.source, current.target]);
-      }
+      (stepId) => highlight(stepId)
     );
 
-    // Methods
+    // Methodsc
+    const highlight = (stepId) => {
+      if (loop === null) return;
+
+      // Invalidate all
+      deactivateAll();
+
+      // Select passed
+      for (let i = 0; i < stepId; i++) {
+        const pass = loop[i];
+        const pass_id = findLink(pass);
+
+        links.value[pass_id].selected = 2;
+        wasActivatedNodes([pass.source, pass.target]);
+      }
+
+      // Select current
+      const current = loop[stepId];
+      const current_id = findLink(current);
+
+      links.value[current_id].selected = 1;
+      activateNodes([current.source, current.target]);
+    };
+
     const loopPosition = (coords) => {
       const node = nodes.value[coords];
 
@@ -151,6 +153,7 @@ export default {
 
       if (links.value.length > 0 && euler.check()) {
         loop = euler.find();
+        highlight(0);
       } else {
         loop = null;
       }

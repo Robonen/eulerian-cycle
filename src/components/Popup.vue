@@ -10,7 +10,7 @@
       <div class="popup-el popup-text">
         <slot name="content"></slot>
       </div>
-      <!-- <div class="popup-el popup-text gray">by Robonen</div> -->
+      <slot name="footer"></slot>
       <div class="popup-el popup-button-cont">
         <div v-if="leftBtnText" class="popup-button" @click="leftBtn">
           {{ leftBtnText }}

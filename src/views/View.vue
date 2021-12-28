@@ -6,11 +6,33 @@
       <span class="version">v0.2</span>
     </template>
     <template v-slot:content>
+      <p>Алгоритм находит Эйлеров цикл в неориентированном графе.</p>
       <p>
-        <b>Эйлеров цикл</b>
-        &mdash; путь, проходящий по всем ребрам графа, и при этом только по
-        одному разу.
+        Перед запуском алгоритма необходимо проверить граф на эйлеровость, т.е.
+        каждая вершина должна иметь четную степень. Чтобы построить Эйлеров
+        цикл, нужно запустить алгоритм из любой вершины.
       </p>
+      <p>
+        Алгоритм напоминает поиск в глубину. Главное отличие состоит в том, что
+        пройденными помечаются не вершины, а ребра графа.
+      </p>
+      <p>
+        Начиная со стартовой вершины <b>v</b> строим путь, добавляя на каждом
+        шаге не пройденное еще ребро, смежное с текущей вершиной. Вершины пути
+        накапливаются в стеке <b>S</b>. Когда наступает такой момент, что для
+        текущей вершины <b>w</b> все инцидентные ей ребра уже пройдены,
+        записываем вершины из <b>S</b> в ответ, пока не встретим вершину,
+        которой инцидентны не пройденные еще ребра. Далее продолжаем обход по не
+        посещенным ребрам.
+      </p>
+    </template>
+    <template v-slot:footer>
+      <a href="https://github.com/robonen/" class="gray">
+        <div class="popup-el popup-text">Автор &mdash; Робонен А.С.</div>
+      </a>
+      <a href="https://github.com/RomaFedoro" class="gray">
+        <div class="popup-el popup-text">Дизайн &mdash; Фёдоров Р.М.</div>
+      </a>
     </template>
   </popup>
   <div class="addition-cont menu">
@@ -90,23 +112,26 @@
       </div>
     </div>
   </div>
-  <div class="addition-cont">
-    <div v-if="stepExists" class="step-cont">
-      <div
-        class="step"
-        v-for="(step, i) in steps"
-        :key="i"
-        :class="{
-          'active-step': i === currentStepNumber || i === currentStepNumber + 1,
-          'dynamic-active-step': played && i < currentStepNumber,
-          'last-active-step': i === currentStepNumber + 1,
-        }"
-        @click="currentStepNumber = i"
-      >
-        {{ step.source }}
+  <transition name="fade-left">
+    <div v-if="stepExists" class="addition-cont">
+      <div class="step-cont">
+        <div
+          class="step"
+          v-for="(step, i) in steps"
+          :key="i"
+          :class="{
+            'active-step':
+              i === currentStepNumber || i === currentStepNumber + 1,
+            'dynamic-active-step': played && i < currentStepNumber,
+            'last-active-step': i === currentStepNumber + 1,
+          }"
+          @click="currentStepNumber = i"
+        >
+          {{ step.source }}
+        </div>
       </div>
     </div>
-  </div>
+  </transition>
 </template>
 
 <script>

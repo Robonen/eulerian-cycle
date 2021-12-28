@@ -28,6 +28,10 @@ html {
   height: 100%;
 }
 
+a {
+  text-decoration: none;
+}
+
 .wrapper {
   display: flex;
   flex: 1;
@@ -526,6 +530,25 @@ p {
   }
   to {
     transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.fade-left-enter-active {
+  animation: fade-left 0.5s;
+}
+
+.fade-left-leave-active {
+  animation: fade-left 0.5s reverse;
+}
+
+@keyframes fade-left {
+  from {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
     opacity: 1;
   }
 }
