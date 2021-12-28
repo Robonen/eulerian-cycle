@@ -106,7 +106,7 @@ export default {
       (stepId) => highlight(stepId)
     );
 
-    // Methodsc
+    // Methods
     const highlight = (stepId) => {
       if (loop === null) return;
 
@@ -128,6 +128,15 @@ export default {
 
       links.value[current_id].selected = 1;
       activateNodes([current.source, current.target]);
+    };
+
+    const hasntIntersections = (node) => {
+      return nodes.value.every((current) => {
+        return (
+          (RADIUS * 2) ** 2 <
+          (node.x - current.x) ** 2 + (node.y - current.y) ** 2
+        );
+      });
     };
 
     const loopPosition = (coords) => {
@@ -185,8 +194,10 @@ export default {
         selected: 0,
       };
 
-      nodes.value.push(newNode);
-      emit("hasVertices", nodes.value.length);
+      if (hasntIntersections(newNode)) {
+        nodes.value.push(newNode);
+        emit("hasVertices", nodes.value.length);
+      }
     };
 
     const removeNode = (id) => {
